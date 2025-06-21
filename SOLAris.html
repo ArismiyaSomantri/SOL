@@ -1,0 +1,776 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulasi Round Robin - Waktu Kedatangan Individual</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+            color: #f0f0f0;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            padding: 25px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #00b4d8;
+        }
+        
+        h1 {
+            color: #00b4d8;
+            font-size: 2.8rem;
+            margin-bottom: 10px;
+            text-shadow: 0 0 10px rgba(0, 180, 216, 0.5);
+        }
+        
+        .subtitle {
+            color: #90e0ef;
+            font-size: 1.2rem;
+            max-width: 800px;
+            margin: 0 auto;
+            line-height: 1.6;
+        }
+        
+        .content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 25px;
+            margin-bottom: 25px;
+        }
+        
+        @media (max-width: 900px) {
+            .content {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .panel {
+            background: rgba(25, 55, 77, 0.7);
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(0, 180, 216, 0.3);
+        }
+        
+        .panel-title {
+            font-size: 1.6rem;
+            color: #00b4d8;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid rgba(0, 180, 216, 0.3);
+            display: flex;
+            align-items: center;
+        }
+        
+        .panel-title i {
+            margin-right: 10px;
+            color: #90e0ef;
+        }
+        
+        .input-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #90e0ef;
+        }
+        
+        input[type="number"] {
+            width: 100%;
+            padding: 12px;
+            background: rgba(0, 0, 0, 0.2);
+            border: 2px solid #0077b6;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: all 0.3s;
+            color: white;
+        }
+        
+        input[type="number"]:focus {
+            border-color: #00b4d8;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(0, 180, 216, 0.3);
+            background: rgba(0, 0, 0, 0.3);
+        }
+        
+        button {
+            background: linear-gradient(to right, #0077b6, #00b4d8);
+            color: white;
+            border: none;
+            padding: 14px 20px;
+            font-size: 1.1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            width: 100%;
+            box-shadow: 0 4px 15px rgba(0, 116, 217, 0.3);
+            margin-top: 10px;
+        }
+        
+        button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(0, 116, 217, 0.5);
+            background: linear-gradient(to right, #0096c7, #48cae4);
+        }
+        
+        button:active {
+            transform: translateY(0);
+        }
+        
+        .process-input {
+            display: grid;
+            grid-template-columns: 80px 1fr 1fr;
+            gap: 10px;
+            align-items: center;
+            margin-bottom: 15px;
+            padding: 12px;
+            background-color: rgba(0, 119, 182, 0.2);
+            border-radius: 8px;
+        }
+        
+        .process-label {
+            font-weight: 600;
+            color: #90e0ef;
+        }
+        
+        .timeline-container {
+            grid-column: 1 / -1;
+        }
+        
+        .timeline {
+            display: flex;
+            overflow-x: auto;
+            background-color: rgba(0, 0, 0, 0.2);
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 15px;
+            min-height: 120px;
+        }
+        
+        .time-segment {
+            min-width: 80px;
+            text-align: center;
+            padding: 15px 5px;
+            border: 2px solid #0077b6;
+            margin-right: 10px;
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            font-weight: bold;
+            box-shadow: 0 3px 6px rgba(0, 0, 0, 0.3);
+            transition: transform 0.2s;
+        }
+        
+        .time-segment:hover {
+            transform: scale(1.05);
+            z-index: 10;
+        }
+        
+        .process {
+            background-color: rgba(0, 180, 216, 0.3);
+            border-color: #00b4d8;
+        }
+        
+        .context-switch {
+            background-color: rgba(255, 89, 94, 0.3);
+            border-color: #ff595e;
+            color: #ffb3b6;
+        }
+        
+        .segment-label {
+            font-size: 1.1rem;
+            margin-bottom: 5px;
+        }
+        
+        .segment-time {
+            font-size: 0.9rem;
+            color: #caf0f8;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            background: rgba(0, 0, 0, 0.2);
+        }
+        
+        th, td {
+            padding: 14px 16px;
+            text-align: center;
+            border: 1px solid rgba(0, 180, 216, 0.3);
+            color: #f0f0f0;
+        }
+        
+        th {
+            background: linear-gradient(to bottom, #0077b6, #0096c7);
+            color: white;
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+        
+        tr:nth-child(even) {
+            background-color: rgba(0, 119, 182, 0.1);
+        }
+        
+        tr:hover {
+            background-color: rgba(0, 150, 199, 0.2);
+        }
+        
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-top: 25px;
+        }
+        
+        .stat-card {
+            background: rgba(0, 53, 89, 0.5);
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            border-top: 3px solid #00b4d8;
+            transition: transform 0.3s;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .stat-card h3 {
+            color: #90e0ef;
+            margin-bottom: 10px;
+            font-size: 1.1rem;
+        }
+        
+        .stat-value {
+            font-size: 2.2rem;
+            font-weight: 700;
+            color: #00b4d8;
+            text-shadow: 0 0 8px rgba(0, 180, 216, 0.5);
+        }
+        
+        .explanation {
+            margin-top: 25px;
+            padding: 20px;
+            background-color: rgba(0, 53, 89, 0.4);
+            border-radius: 10px;
+            border-left: 4px solid #00b4d8;
+        }
+        
+        .explanation h3 {
+            color: #00b4d8;
+            margin-bottom: 15px;
+            font-size: 1.4rem;
+        }
+        
+        .explanation p {
+            margin-bottom: 15px;
+            line-height: 1.6;
+            color: #caf0f8;
+        }
+        
+        .explanation ul {
+            padding-left: 25px;
+            margin-bottom: 15px;
+        }
+        
+        .explanation li {
+            margin-bottom: 8px;
+            line-height: 1.5;
+            color: #caf0f8;
+        }
+        
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid rgba(0, 180, 216, 0.3);
+            color: #90e0ef;
+            font-size: 0.9rem;
+        }
+        
+        .legend {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 12px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 20px;
+        }
+        
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+        }
+        
+        .legend-process {
+            background-color: rgba(0, 180, 216, 0.7);
+            border: 1px solid #00b4d8;
+        }
+        
+        .legend-cs {
+            background-color: rgba(255, 89, 94, 0.7);
+            border: 1px solid #ff595e;
+        }
+        
+        .process-header {
+            display: grid;
+            grid-template-columns: 80px 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 10px;
+            padding: 0 12px;
+            font-weight: bold;
+            color: #00b4d8;
+        }
+        
+        .glow {
+            animation: glow 2s infinite alternate;
+        }
+        
+        @keyframes glow {
+            from { box-shadow: 0 0 5px -5px #00b4d8; }
+            to { box-shadow: 0 0 20px 5px #00b4d8; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container glow">
+        <header>
+            <h1>Aris Miya Somantri</h1>
+            <h3> 11240082 TI A</3>
+            <h2><i class="fas fa-cogs"></i> SIMULASI ROUND ROBIN</h2>
+            <p class="subtitle">Simulasi algoritma penjadwalan CPU Round Robin dengan waktu kedatangan individual untuk setiap proses</p>
+        </header>
+        
+        <div class="content">
+            <div class="panel">
+                <h2 class="panel-title"><i class="fas fa-sliders-h"></i> PARAMETER</h2>
+                
+                <div class="input-group">
+                    <label for="quantum"><i class="fas fa-hourglass-half"></i> Quantum Time:</label>
+                    <input type="number" id="quantum" min="1" value="3">
+                </div>
+                
+                <div class="input-group">
+                    <label for="context-switch"><i class="fas fa-exchange-alt"></i> Context Switch Time:</label>
+                    <input type="number" id="context-switch" min="0" value="1">
+                </div>
+                
+                <button id="run-btn" onclick="runRoundRobin()">
+                    <i class="fas fa-play-circle"></i> JALANKAN SIMULASI
+                </button>
+                <button id="reset-btn" onclick="resetSimulation()" style="background: linear-gradient(to right, #6a040f, #9d0208);">
+                    <i class="fas fa-undo"></i> RESET SIMULASI
+                </button>
+            </div>
+            
+            <div class="panel">
+                <h2 class="panel-title"><i class="fas fa-tasks"></i> PROSES</h2>
+                
+                <div class="process-header">
+                    <div>Proses</div>
+                    <div>Waktu Kedatangan (AT)</div>
+                    <div>Burst Time (BT)</div>
+                </div>
+                
+                <div id="process-inputs">
+                    <div class="process-input">
+                        <div class="process-label">P1</div>
+                        <input type="number" class="arrival-time" min="0" placeholder="AT" value="0">
+                        <input type="number" class="burst-time" min="1" placeholder="BT" value="5">
+                    </div>
+                    <div class="process-input">
+                        <div class="process-label">P2</div>
+                        <input type="number" class="arrival-time" min="0" placeholder="AT" value="1">
+                        <input type="number" class="burst-time" min="1" placeholder="BT" value="3">
+                    </div>
+                    <div class="process-input">
+                        <div class="process-label">P3</div>
+                        <input type="number" class="arrival-time" min="0" placeholder="AT" value="2">
+                        <input type="number" class="burst-time" min="1" placeholder="BT" value="8">
+                    </div>
+                </div>
+                
+                <button onclick="addProcess()">
+                    <i class="fas fa-plus-circle"></i> TAMBAH PROSES
+                </button>
+            </div>
+            
+            <div class="panel timeline-container">
+                <h2 class="panel-title"><i class="fas fa-stream"></i> TIMELINE EKSEKUSI</h2>
+                <div id="timeline" class="timeline">
+                    <div style="padding: 20px; color: #90e0ef; font-style: italic;">
+                        Timeline akan muncul setelah simulasi dijalankan...
+                    </div>
+                </div>
+                
+                <div class="legend">
+                    <div class="legend-item">
+                        <div class="legend-color legend-process"></div>
+                        <span>Eksekusi Proses</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color legend-cs"></div>
+                        <span>Context Switch (CS)</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="panel">
+                <h2 class="panel-title"><i class="fas fa-table"></i> TABEL PROSES</h2>
+                <table id="process-table">
+                    <thead>
+                        <tr>
+                            <th>Proses</th>
+                            <th>AT</th>
+                            <th>BT</th>
+                            <th>WT</th>
+                            <th>TAT</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td colspan="5" style="color: #90e0ef; text-align: center; padding: 20px;">
+                                Data akan muncul setelah simulasi dijalankan...
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <div class="panel">
+                <h2 class="panel-title"><i class="fas fa-chart-line"></i> STATISTIK</h2>
+                <div class="stats">
+                    <div class="stat-card">
+                        <h3>Rata-rata Waiting Time</h3>
+                        <div class="stat-value" id="avg-wt">0.00</div>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Rata-rata Turnaround Time</h3>
+                        <div class="stat-value" id="avg-tat">0.00</div>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Jumlah Context Switch</h3>
+                        <div class="stat-value" id="total-cs">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Total Waktu CS</h3>
+                        <div class="stat-value" id="total-cs-time">0</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="explanation">
+            <h3><i class="fas fa-info-circle"></i> PENJELASAN ALGORITMA ROUND ROBIN</h3>
+            <p>Algoritma Round Robin adalah metode penjadwalan CPU di mana setiap proses mendapatkan slot waktu tetap (quantum) untuk dieksekusi. Jika proses belum selesai dalam waktu quantum, CPU akan dialihkan ke proses berikutnya di antrian.</p>
+            
+            <p>Fitur utama simulasi ini:</p>
+            <ul>
+                <li><strong>Waktu Kedatangan Individual</strong>: Setiap proses memiliki waktu kedatangan (arrival time) yang dapat diatur secara mandiri</li>
+                <li><strong>Context Switch</strong>: Memperhitungkan waktu yang diperlukan untuk berpindah antar proses</li>
+                <li><strong>Visualisasi Timeline</strong>: Menampilkan urutan eksekusi proses dan context switch secara grafis</li>
+                <li><strong>Statistik Lengkap</strong>: Menghitung waktu tunggu, turnaround time, dan efisiensi sistem</li>
+            </ul>
+            
+            <p>Keterangan singkat:</p>
+            <ul>
+                <li><strong>AT (Arrival Time)</strong>: Waktu saat proses tiba di sistem</li>
+                <li><strong>BT (Burst Time)</strong>: Waktu eksekusi yang diperlukan proses</li>
+                <li><strong>WT (Waiting Time)</strong>: Total waktu proses menunggu di memori</li>
+                <li><strong>TAT (Turnaround Time)</strong>: Total waktu dari kedatangan hingga selesai (TAT = WT + BT)</li>
+                <li><strong>Quantum</strong>: Waktu eksekusi maksimum yang dialokasikan per proses</li>
+                <li><strong>Context Switch</strong>: Waktu yang diperlukan untuk berpindah antar proses</li>
+            </ul>
+        </div>
+        
+        <div class="footer">
+            <p>Simulasi Penjadwalan CPU - Round Robin | Sistem Operasi | Waktu Kedatangan Individual</p>
+        </div>
+    </div>
+    
+    <script>
+        // Data proses
+        let processes = [];
+        let contextSwitches = [];
+        
+        // Menambahkan proses baru
+        function addProcess() {
+            const container = document.getElementById('process-inputs');
+            const processCount = container.children.length + 1;
+            
+            const processDiv = document.createElement('div');
+            processDiv.className = 'process-input';
+            processDiv.innerHTML = `
+                <div class="process-label">P${processCount}</div>
+                <input type="number" class="arrival-time" min="0" placeholder="AT" value="${processCount}">
+                <input type="number" class="burst-time" min="1" placeholder="BT" value="4">
+            `;
+            
+            container.appendChild(processDiv);
+        }
+        
+        // Reset simulasi
+        function resetSimulation() {
+            document.getElementById('timeline').innerHTML = '<div style="padding: 20px; color: #90e0ef; font-style: italic;">Timeline akan muncul setelah simulasi dijalankan...</div>';
+            document.querySelector('#process-table tbody').innerHTML = '<tr><td colspan="5" style="color: #90e0ef; text-align: center; padding: 20px;">Data akan muncul setelah simulasi dijalankan...</td></tr>';
+            document.getElementById('avg-wt').textContent = '0.00';
+            document.getElementById('avg-tat').textContent = '0.00';
+            document.getElementById('total-cs').textContent = '0';
+            document.getElementById('total-cs-time').textContent = '0';
+            processes = [];
+            contextSwitches = [];
+        }
+        
+        // Menjalankan simulasi Round Robin
+        function runRoundRobin() {
+            // Reset hasil sebelumnya
+            resetSimulation();
+            
+            // Ambil parameter
+            const quantum = parseInt(document.getElementById('quantum').value) || 3;
+            const contextSwitchTime = parseInt(document.getElementById('context-switch').value) || 1;
+            
+            // Kumpulkan data proses
+            const processInputs = document.querySelectorAll('.process-input');
+            processInputs.forEach((input, index) => {
+                const arrivalTime = parseInt(input.querySelector('.arrival-time').value) || 0;
+                const burstTime = parseInt(input.querySelector('.burst-time').value) || 1;
+                
+                processes.push({
+                    id: `P${index + 1}`,
+                    arrivalTime,
+                    burstTime,
+                    remainingTime: burstTime,
+                    startTimes: [],
+                    endTimes: [],
+                    waitingTime: 0,
+                    turnaroundTime: 0
+                });
+            });
+            
+            // Jalankan simulasi
+            simulateRoundRobin(quantum, contextSwitchTime);
+            
+            // Tampilkan hasil
+            displayResults(contextSwitchTime);
+        }
+        
+        // Simulasi algoritma Round Robin
+        function simulateRoundRobin(quantum, contextSwitchTime) {
+            let currentTime = 0;
+            const queue = [];
+            const completed = [];
+            const n = processes.length;
+            
+            // Urutkan proses berdasarkan waktu kedatangan
+            processes.sort((a, b) => a.arrivalTime - b.arrivalTime);
+            
+            // Proses yang tiba pada waktu 0
+            let nextIdx = 0;
+            while (nextIdx < n && processes[nextIdx].arrivalTime <= currentTime) {
+                queue.push(processes[nextIdx++]);
+            }
+            
+            // Loop penjadwalan utama
+            while (queue.length > 0 || nextIdx < n) {
+                if (queue.length === 0) {
+                    // Tidak ada proses di antrian, maju ke waktu kedatangan berikutnya
+                    currentTime = processes[nextIdx].arrivalTime;
+                    while (nextIdx < n && processes[nextIdx].arrivalTime <= currentTime) {
+                        queue.push(processes[nextIdx++]);
+                    }
+                }
+                
+                const currentProcess = queue.shift();
+                const startTime = currentTime;
+                
+                // Hitung waktu eksekusi
+                const execTime = Math.min(quantum, currentProcess.remainingTime);
+                currentTime += execTime;
+                currentProcess.remainingTime -= execTime;
+                
+                // Catat periode eksekusi
+                currentProcess.startTimes.push(startTime);
+                currentProcess.endTimes.push(currentTime);
+                
+                // Tambahkan proses yang baru tiba selama eksekusi
+                while (nextIdx < n && processes[nextIdx].arrivalTime <= currentTime) {
+                    queue.push(processes[nextIdx++]);
+                }
+                
+                // Tambahkan context switch setelah eksekusi jika diperlukan
+                if (currentProcess.remainingTime > 0 || queue.length > 0) {
+                    contextSwitches.push({
+                        start: currentTime,
+                        end: currentTime + contextSwitchTime
+                    });
+                    currentTime += contextSwitchTime;
+                }
+                
+                // Masukkan kembali ke antrian jika belum selesai
+                if (currentProcess.remainingTime > 0) {
+                    queue.push(currentProcess);
+                } else {
+                    completed.push(currentProcess);
+                }
+            }
+            
+            // Hitung waktu tunggu dan turnaround time
+            completed.forEach(proc => {
+                proc.waitingTime = proc.startTimes[0] - proc.arrivalTime;
+                for (let i = 1; i < proc.startTimes.length; i++) {
+                    proc.waitingTime += (proc.startTimes[i] - proc.endTimes[i-1]);
+                }
+                proc.turnaroundTime = proc.waitingTime + proc.burstTime;
+            });
+            
+            processes = completed;
+        }
+        
+        // Menampilkan hasil simulasi
+        function displayResults(contextSwitchTime) {
+            const timeline = document.getElementById('timeline');
+            const tableBody = document.querySelector('#process-table tbody');
+            
+            // Clear previous content
+            timeline.innerHTML = '';
+            tableBody.innerHTML = '';
+            
+            // Buat timeline
+            const timeSegments = [];
+            
+            // Tambahkan segmen proses
+            processes.forEach(proc => {
+                for (let i = 0; i < proc.startTimes.length; i++) {
+                    timeSegments.push({
+                        type: 'process',
+                        id: proc.id,
+                        start: proc.startTimes[i],
+                        end: proc.endTimes[i]
+                    });
+                }
+            });
+            
+            // Tambahkan segmen context switch
+            contextSwitches.forEach(cs => {
+                timeSegments.push({
+                    type: 'context-switch',
+                    start: cs.start,
+                    end: cs.end
+                });
+            });
+            
+            // Urutkan segmen berdasarkan waktu mulai
+            timeSegments.sort((a, b) => a.start - b.start);
+            
+            // Tampilkan timeline
+            timeSegments.forEach(seg => {
+                const segElement = document.createElement('div');
+                segElement.className = 'time-segment';
+                
+                if (seg.type === 'process') {
+                    segElement.classList.add('process');
+                    segElement.style.backgroundColor = getProcessColor(seg.id);
+                    segElement.innerHTML = `
+                        <div class="segment-label">${seg.id}</div>
+                        <div class="segment-time">${seg.start}-${seg.end}</div>
+                    `;
+                } else {
+                    segElement.classList.add('context-switch');
+                    segElement.innerHTML = `
+                        <div class="segment-label">CS</div>
+                        <div class="segment-time">${seg.start}-${seg.end}</div>
+                    `;
+                }
+                
+                timeline.appendChild(segElement);
+            });
+            
+            // Tampilkan tabel proses
+            let totalWT = 0;
+            let totalTAT = 0;
+            
+            processes.forEach(proc => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${proc.id}</td>
+                    <td>${proc.arrivalTime}</td>
+                    <td>${proc.burstTime}</td>
+                    <td>${proc.waitingTime}</td>
+                    <td>${proc.turnaroundTime}</td>
+                `;
+                tableBody.appendChild(row);
+                
+                totalWT += proc.waitingTime;
+                totalTAT += proc.turnaroundTime;
+            });
+            
+            // Hitung statistik
+            const avgWT = (totalWT / processes.length).toFixed(2);
+            const avgTAT = (totalTAT / processes.length).toFixed(2);
+            const totalCS = contextSwitches.length;
+            const totalCSTime = totalCS * contextSwitchTime;
+            
+            // Tampilkan statistik
+            document.getElementById('avg-wt').textContent = avgWT;
+            document.getElementById('avg-tat').textContent = avgTAT;
+            document.getElementById('total-cs').textContent = totalCS;
+            document.getElementById('total-cs-time').textContent = totalCSTime;
+        }
+        
+        // Mendapatkan warna untuk proses
+        function getProcessColor(processId) {
+            const colors = [
+                'rgba(0, 180, 216, 0.7)', 
+                'rgba(0, 150, 199, 0.7)', 
+                'rgba(0, 119, 182, 0.7)',
+                'rgba(72, 202, 228, 0.7)',
+                'rgba(144, 224, 239, 0.7)',
+                'rgba(202, 240, 248, 0.7)'
+            ];
+            const index = parseInt(processId.substring(1)) - 1;
+            return colors[index % colors.length];
+        }
+    </script>
+    
+    <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+</body>
+</html>
